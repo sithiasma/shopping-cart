@@ -6,13 +6,19 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var expressHbs = require('express-handlebars');
 var mongoose = require('mongoose');
+var session = require('express-session');
+var passport = require('passport');
+var flash = require('connect-flash');
+var validator = require('express-validator');
 
-var index = require('./routes/index');
+var routes = require('./routes/index');
+var userRoutes = require('./routes/user');
 
 
 var app = express();
 
 mongoose.connect('localhost:27017/shopping');
+require('./config/passport');
 
 // view engine setup
 app.engine('.hbs', expressHbs({defaultLayout: 'layout', extname: '.hbs'}));
@@ -23,10 +29,16 @@ app.set('view engine', 'hbs');
 app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
+app.use(validator());
 app.use(cookieParser());
+app.use(session({secret: 'mysupersecret', resave: false, saveUninitialized: false}));
+app.use(flash());
+app.use(passport.initialize());
+app.use(passport.session());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/', index);
+app.use('/user', userRoutes);
+app.use('/', routes);
 
 
 // catch 404 and forward to error handler
